@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # 如果你的主分支是 master，請改為 master
+    branches: [ main ]
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -11,6 +12,10 @@ permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -21,6 +26,8 @@ jobs:
         with:
           node-version: 24
           cache: 'npm'
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
       - run: npm install
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
