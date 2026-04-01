@@ -64,5 +64,4 @@ export interface UserState {
   lastShopRefresh?: number;
   badges: string[];
   challengeProgress: { [team: string]: number };
-  challengeAttempts?: { [challengeId: string]: number };
 }

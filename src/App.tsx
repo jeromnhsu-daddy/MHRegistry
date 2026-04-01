@@ -291,7 +291,6 @@ const App: React.FC = () => {
             lastDailyReward: parsed.lastDailyReward,
             badges: Array.isArray(parsed.badges) ? parsed.badges : [],
             challengeProgress: parsed.challengeProgress ?? {},
-            challengeAttempts: parsed.challengeAttempts ?? {},
             shopHeroes: Array.isArray(parsed.shopHeroes) ? parsed.shopHeroes : [],
             lastShopRefresh: parsed.lastShopRefresh
           };
@@ -309,7 +308,6 @@ const App: React.FC = () => {
       lastHPUpdate: Date.now(),
       badges: [], 
       challengeProgress: {}, 
-      challengeAttempts: {},
       shopHeroes: [] 
     };
   });
@@ -641,32 +639,16 @@ const App: React.FC = () => {
       for (let i = 0; i < 3; i++) {
         enemyTeam.push(teamHeroes[Math.floor(Math.random() * teamHeroes.length)]);
       }
-      
-      // Pity Mechanic: Repeated attempts weaken the opponent
-      const attempts = user.challengeAttempts?.[challenge.id] || 0;
-      const pityBonus = Math.min(3, attempts); // Max -3 level pity bonus
-      
-      // Challenges are harder: higher base level + difficulty multiplier + random fluctuation (-2 to +2) - pity bonus
-      const randomOffset = Math.floor(Math.random() * 5) - 2; 
-      enemyLevel = Math.max(1, avgPlayerLevel + challenge.difficulty + randomOffset - pityBonus);
-      
-      // Increment attempt count for next time (will be reset on win)
-      setUser(prev => ({
-        ...prev,
-        challengeAttempts: {
-          ...(prev.challengeAttempts || {}),
-          [challenge.id]: (prev.challengeAttempts?.[challenge.id] || 0) + 1
-        }
-      }));
+      // Challenges are harder: higher base level + difficulty multiplier
+      enemyLevel = avgPlayerLevel + (challenge.difficulty * 2);
     } else {
-      enemyLevel = Math.max(1, avgPlayerLevel + (Math.random() > 0.5 ? 1 : -1));
       enemyTeam = Array.from({ length: 3 }).map(() => HEROES[Math.floor(Math.random() * HEROES.length)]);
     }
 
     // Team Synergy Check
     const pTeams = new Set(playerTeam.map(h => h.team));
     const hasSynergy = pTeams.size === 1;
-    const synergyBonus = hasSynergy ? 1.25 : 1.0; // Slightly buffed synergy from 1.2 to 1.25
+    const synergyBonus = hasSynergy ? 1.2 : 1.0;
 
     const pTeamStats = playerTeam.map(h => {
       const base = getHeroStats(h);
@@ -687,7 +669,7 @@ const App: React.FC = () => {
       };
     });
 
-    const diffScale = challenge ? 1 + (challenge.difficulty * 0.05) : 1.0; // Reduced from 0.1 to 0.05 per difficulty level
+    const diffScale = challenge ? 1 + (challenge.difficulty * 0.1) : 1.0; // Extra fine-tuning for challenges
     const eTeamStats = enemyTeam.map(h => {
       const base = getHeroStats(h, enemyLevel);
       return { 
@@ -720,11 +702,6 @@ const App: React.FC = () => {
     const logs: string[] = [t('battleStart')];
     if (challenge) {
       logs.push(`${t('challenge')}: ${i18n.language === 'en' ? challenge.name.en : challenge.name.zh}`);
-      if (enemyLevel < avgPlayerLevel + challenge.difficulty) {
-        logs.push(`⚠️ ${i18n.language === 'zh' ? '偵測到對手狀態不佳！這是進攻的好機會！' : 'Enemy seems weakened! Perfect time to strike!'}`);
-      } else if (enemyLevel > avgPlayerLevel + challenge.difficulty) {
-        logs.push(`🔥 ${i18n.language === 'zh' ? '警告：對手正處於巔峰狀態，請小心應戰！' : 'Warning: Enemy is at peak performance! Be careful!'}`);
-      }
     }
     logs.push(`${t('playerTeam')}: ${playerTeam.map(h => i18n.language === 'zh' ? h.name.zh : h.name.en).join(', ')}`);
     logs.push(`${t('enemyTeamLabel')}: ${enemyTeam.map(h => i18n.language === 'zh' ? h.name.zh : h.name.en).join(', ')}`);
@@ -744,8 +721,8 @@ const App: React.FC = () => {
           playSound('teamAttack');
           setLiveBattleState(prev => prev ? { ...prev, teamAttackEffect: true } : null);
           const totalAtk = pTeamStats.reduce((sum, h) => sum + (h.currentHp > 0 ? h.attack : 0), 0);
-          // Buffed damage multiplier from 0.4 to 0.6
-          const dmg = totalAtk * 0.6;
+          // Reduced damage multiplier from 1.2 to 0.4 to prevent one-shotting
+          const dmg = totalAtk * 0.4;
           
           logs.push(`${t('teamAttack')}: ${Array.from(pTeams)[0]} ${t('assemble')}`);
           eTeamStats.forEach(h => {
@@ -784,15 +761,12 @@ const App: React.FC = () => {
           let updatedGold = prev.gold;
           let newBadges = prev.badges;
           let newProgress = prev.challengeProgress;
-          let newAttempts = { ...(prev.challengeAttempts || {}) };
 
           if (win && finalChallengeId) {
             const challenge = CHALLENGES.find(c => c.id === finalChallengeId)!;
             newBadges = prev.badges.includes(challenge.badge) ? prev.badges : [...prev.badges, challenge.badge];
             newProgress = { ...prev.challengeProgress, [challenge.team]: (prev.challengeProgress[challenge.team] || 0) + 1 };
             updatedGold += challenge.rewardGold;
-            // Reset attempts on win
-            delete newAttempts[finalChallengeId];
           } else if (win) {
             updatedGold += 500;
           }
@@ -802,7 +776,6 @@ const App: React.FC = () => {
             gold: updatedGold,
             badges: newBadges,
             challengeProgress: newProgress,
-            challengeAttempts: newAttempts,
             heroCurrentHP: newHP
           };
         });
