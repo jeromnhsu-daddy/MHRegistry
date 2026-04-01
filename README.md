@@ -15,6 +15,23 @@ A comprehensive, interactive database and game featuring Marvel heroes and villa
 - **Multi-language Support**: Fully localized in English and Traditional Chinese.
 - **Responsive Design**: A brutalist, high-energy UI that looks great on all devices.
 
+## 🎮 Game Mechanics
+
+### ⚔️ Battle Balance
+- **Dynamic Difficulty**: Challenge opponents are scaled based on your team's average level.
+- **Difficulty Scaling**: Each challenge level adds a flat level bonus and a 5% increase to all enemy stats (HP, ATK, DEF, SPD).
+- **Random Fluctuation**: Opponent levels fluctuate by **+/- 2** levels each time you enter a battle, adding variety and strategic opportunities.
+- **Battle Intel**: Real-time logs will alert you if an enemy is "Weakened" (low level roll) or at "Peak Performance" (high level roll).
+
+### 🛡️ Pity System (Challenge Mode)
+- **Repeated Attempts**: If you fail or retry a specific challenge, the opponent's level will gradually decrease.
+- **Weakening Effect**: Each attempt reduces the enemy level by 1, up to a maximum of **-3 levels**.
+- **Victory Reset**: The attempt counter resets once you successfully complete the challenge.
+
+### 🤝 Team Synergy
+- **Faction Bonus**: Using 3 heroes from the same team (e.g., all Avengers) grants a **25% boost** to all stats.
+- **Team Attack**: Pure-team compositions have a chance to trigger a powerful "Assemble" attack, dealing **60% of total team attack** to all enemies.
+
 ## 🛠️ Tech Stack
 
 - **Frontend**: [React 18](https://reactjs.org/)
